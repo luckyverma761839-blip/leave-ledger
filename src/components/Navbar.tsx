@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800">
@@ -25,15 +26,19 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
 
-          <button className="text-gray-300 hover:text-white transition">
-            Login
-          </button>
+  <Link href="/login">
+    <button className="text-gray-300 hover:text-white transition">
+      Login
+    </button>
+  </Link>
 
-          <button className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-xl transition">
-            Sign Up
-          </button>
+  <Link href="/signup">
+    <button className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-xl transition">
+      Sign Up
+    </button>
+  </Link>
 
-        </div>
+</div>
 
       </nav>
     </header>
