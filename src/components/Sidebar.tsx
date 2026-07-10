@@ -27,7 +27,7 @@ export default function Sidebar() {
         </Link>
 
         <Link
-          href="#"
+          href="/apply-leave"
           className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
         >
           <CalendarDays size={20} />
@@ -35,7 +35,7 @@ export default function Sidebar() {
         </Link>
 
         <Link
-          href="#"
+        href="/apply-leave"
           className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
         >
           <History size={20} />
@@ -43,7 +43,7 @@ export default function Sidebar() {
         </Link>
 
         <Link
-          href="#"
+          href="/apply-leave"
           className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
         >
           <Users size={20} />
@@ -51,7 +51,7 @@ export default function Sidebar() {
         </Link>
 
         <Link
-          href="#"
+         href="/apply-leave"
           className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
         >
           <Settings size={20} />
