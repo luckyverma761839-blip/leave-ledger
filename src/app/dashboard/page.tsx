@@ -1,5 +1,5 @@
 import Sidebar from "../../components/Sidebar";
-
+import Topbar from "../../components/Topbar";
 export default function Dashboard() {
   return (
     <main className="flex bg-slate-950 text-white">
@@ -7,15 +7,8 @@ export default function Dashboard() {
       <Sidebar />
 
       <section className="flex-1 p-10">
-
-        <h1 className="text-4xl font-bold">
-          Dashboard
-        </h1>
-
-        <p className="text-gray-400 mt-2">
-          Welcome back 👋
-        </p>
-
+<Topbar />
+        
         <div className="grid md:grid-cols-3 gap-6 mt-10">
 
           <div className="bg-slate-900 p-6 rounded-2xl">
