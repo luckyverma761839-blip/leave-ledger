@@ -35,23 +35,24 @@ export default function Sidebar() {
         </Link>
 
         <Link
-        href="/apply-leave"
+        href="/leave-history"
           className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
         >
           <History size={20} />
           Leave History
         </Link>
 
-        <Link
-          href="/apply-leave"
-          className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
-        >
-          <Users size={20} />
-          Employees
-        </Link>
+       <Link
+  href="/employees"
+  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
+>
+  <Users size={20} />
+  Employees
+</Link>
+
 
         <Link
-         href="/apply-leave"
+        href="/settings"
           className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
         >
           <Settings size={20} />
