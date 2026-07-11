@@ -1,7 +1,52 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
+import { supabase } from "../../lib/supabase";
+
+type Leave = {
+  id: string;
+  employee_name: string;
+  leave_type: string;
+  from_date: string;
+  to_date: string;
+  status: string;
+};
 
 export default function EmployeesPage() {
+  const [leaves, setLeaves] = useState<Leave[]>([]);
+
+  useEffect(() => {
+    fetchLeaves();
+  }, []);
+
+  async function fetchLeaves() {
+    const { data, error } = await supabase
+      .from("leaves")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error) {
+      setLeaves(data || []);
+    }
+  }
+
+  async function updateStatus(id: string, status: string) {
+    const { error } = await supabase
+      .from("leaves")
+      .update({ status })
+      .eq("id", id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert(`Leave ${status}`);
+    fetchLeaves();
+  }
+
   return (
     <main className="flex min-h-screen bg-slate-950 text-white">
       <Sidebar />
@@ -11,51 +56,81 @@ export default function EmployeesPage() {
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
 
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Employees</h2>
-
-            <button className="bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-xl">
-              + Add Employee
-            </button>
-          </div>
+          <h2 className="text-3xl font-bold mb-8">
+            Employee Leave Requests
+          </h2>
 
           <table className="w-full">
 
             <thead>
               <tr className="border-b border-slate-700 text-left">
-                <th className="py-4">Name</th>
-                <th>Email</th>
-                <th>Department</th>
-                <th>Leaves</th>
+                <th className="py-4">Employee</th>
+                <th>Leave Type</th>
+                <th>From</th>
+                <th>To</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
 
             <tbody>
 
-              <tr className="border-b border-slate-800">
-                <td className="py-4">Rahul Sharma</td>
-                <td>rahul@example.com</td>
-                <td>Development</td>
-                <td>12</td>
-                <td className="text-green-400">Active</td>
-              </tr>
+              {leaves.map((leave) => (
 
-              <tr className="border-b border-slate-800">
-                <td className="py-4">Anjali Verma</td>
-                <td>anjali@example.com</td>
-                <td>HR</td>
-                <td>8</td>
-                <td className="text-green-400">Active</td>
-              </tr>
+                <tr
+                  key={leave.id}
+                  className="border-b border-slate-800"
+                >
 
-              <tr>
-                <td className="py-4">Rohit Singh</td>
-                <td>rohit@example.com</td>
-                <td>Marketing</td>
-                <td>5</td>
-                <td className="text-yellow-400">On Leave</td>
-              </tr>
+                  <td className="py-4">
+                    {leave.employee_name}
+                  </td>
+
+                  <td>{leave.leave_type}</td>
+
+                  <td>{leave.from_date}</td>
+
+                  <td>{leave.to_date}</td>
+
+                  <td>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        leave.status === "Approved"
+                          ? "bg-green-600"
+                          : leave.status === "Rejected"
+                          ? "bg-red-600"
+                          : "bg-yellow-500 text-black"
+                      }`}
+                    >
+                      {leave.status}
+                    </span>
+                  </td>
+
+                  <td className="space-x-2">
+
+                    <button
+                      onClick={() =>
+                        updateStatus(leave.id, "Approved")
+                      }
+                      className="bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg"
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        updateStatus(leave.id, "Rejected")
+                      }
+                      className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg"
+                    >
+                      Reject
+                    </button>
+
+                  </td>
+
+                </tr>
+
+              ))}
 
             </tbody>
 
