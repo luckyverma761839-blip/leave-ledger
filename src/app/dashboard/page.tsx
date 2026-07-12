@@ -1,4 +1,5 @@
 "use client";
+import LeaveChart from "../../components/dashboard/LeaveChart";
 import WelcomeCard from "../../components/dashboard/WelcomeCard";
 import RecentActivity from "../../components/dashboard/RecentActivity";
 import StatsCard from "../../components/dashboard/StatsCard";
@@ -17,13 +18,13 @@ import { supabase } from "../../lib/supabase";
 
 export default function Dashboard() {
   interface Activity {
-  id: number;
-  leave_type: string;
-  status: string;
-  from_date: string;
-}
+    id: number;
+    leave_type: string;
+    status: string;
+    from_date: string;
+  }
 
-const [activities, setActivities] = useState<Activity[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   const [name, setName] = useState("");
   const [totalLeaves, setTotalLeaves] = useState(0);
@@ -36,63 +37,63 @@ const [activities, setActivities] = useState<Activity[]>([]);
     fetchDashboardData();
   }, []);
 
- async function fetchDashboardData() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  async function fetchDashboardData() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) return;
+    if (!user) return;
 
-  // Profile fetch
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role, name")
-    .eq("email", user.email)
-    .single();
+    // Profile fetch
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, name")
+      .eq("email", user.email)
+      .single();
 
-  if (profileError) {
-    console.log(profileError);
-    return;
+    if (profileError) {
+      console.log(profileError);
+      return;
+    }
+
+    setName(profile.name);
+
+    // Leaves query
+    let query = supabase
+      .from("leaves")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    // Employee ko sirf apni leaves dikhao
+    if (profile.role !== "hr") {
+      query = query.eq("employee_email", user.email);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    // Recent Activity
+    setActivities(data.slice(0, 5));
+
+    // Stats
+    setTotalLeaves(data.length);
+
+    setPendingLeaves(
+      data.filter((leave) => leave.status === "Pending").length
+    );
+
+    setApprovedLeaves(
+      data.filter((leave) => leave.status === "Approved").length
+    );
+
+    setRejectedLeaves(
+      data.filter((leave) => leave.status === "Rejected").length
+    );
   }
-
-  setName(profile.name);
-
-  // Leaves query
-  let query = supabase
-    .from("leaves")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  // Employee ko sirf apni leaves dikhao
-  if (profile.role !== "hr") {
-    query = query.eq("employee_email", user.email);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.log(error);
-    return;
-  }
-
-  // Recent Activity
-  setActivities(data.slice(0, 5));
-
-  // Stats
-  setTotalLeaves(data.length);
-
-  setPendingLeaves(
-    data.filter((leave) => leave.status === "Pending").length
-  );
-
-  setApprovedLeaves(
-    data.filter((leave) => leave.status === "Approved").length
-  );
-
-  setRejectedLeaves(
-    data.filter((leave) => leave.status === "Rejected").length
-  );
-}
 
   return (
     <ProtectedRoute>
@@ -131,7 +132,7 @@ const [activities, setActivities] = useState<Activity[]>([]);
             />
 
             <StatsCard
-   
+
               title="Rejected"
               value={rejectedLeaves}
               subtitle="Rejected Requests"
@@ -140,19 +141,17 @@ const [activities, setActivities] = useState<Activity[]>([]);
             />
 
           </div>
-                   <div className="grid lg:grid-cols-2 gap-6 mt-8">
+          <div className="grid lg:grid-cols-2 gap-6 mt-8">
 
-  <RecentActivity activities={activities} />
+            <RecentActivity activities={activities} />
 
-  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-center">
-    <h2 className="text-xl font-semibold text-gray-400">
-      📊 Leave Analytics
-      <br />
-      Coming Next...
-    </h2>
-  </div>
+            <LeaveChart
+              approved={approvedLeaves}
+              pending={pendingLeaves}
+              rejected={rejectedLeaves}
+            />
 
-</div>
+          </div>
 
         </section>
 
