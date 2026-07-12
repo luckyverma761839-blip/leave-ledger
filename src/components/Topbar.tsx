@@ -16,24 +16,17 @@ export default function Topbar() {
 
         setEmail(user.email || "");
 
-        console.log("Email:", user.email);
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("email", user.email)
+          .single();
 
-        const { data, error } = await supabase
-  .from("profiles")
-  .select("*")
-  .eq("email", user.email);
-
-console.log("Current Email:", user.email);
-console.log("Profiles:", data);
-console.log("Error:", error);
-
-if (data && data.length > 0) {
-  setRole(data[0].role);
-}
+        setRole(data?.role ?? "");
       }
     }
 
-    getUser();
+    void getUser();
   }, []);
 
   const firstLetter = email ? email.charAt(0).toUpperCase() : "U";

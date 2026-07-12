@@ -19,35 +19,43 @@ export default function ApplyLeave() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    console.log("USER:", user);
-
     if (!user) {
       alert("Please login first!");
       return;
     }
 
-    // Profile se name lao
-// Profile se name lao
-const { data: profile } = await supabase
-  .from("profiles")
-  .select("name")
-  .eq("email", user.email)
-  .single();
+    if (!fromDate || !toDate || !reason.trim()) {
+      alert("Please complete all fields.");
+      return;
+    }
 
-console.log("User Email:", user.email);
-console.log("Profile:", profile);
+    if (toDate < fromDate) {
+      alert("End date cannot be before the start date.");
+      return;
+    }
 
-const { error } = await supabase.from("leaves").insert([
-  {
-    employee_name: profile?.name,
-    employee_email: user.email,
-    leave_type: leaveType,
-    from_date: fromDate,
-    to_date: toDate,
-    reason: reason,
-    status: "Pending",
-  },
-]);
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("email", user.email)
+      .single();
+
+    if (profileError || !profile?.name) {
+      alert("Your profile could not be loaded. Please try again.");
+      return;
+    }
+
+    const { error } = await supabase.from("leaves").insert([
+      {
+        employee_name: profile.name,
+        employee_email: user.email,
+        leave_type: leaveType,
+        from_date: fromDate,
+        to_date: toDate,
+        reason: reason.trim(),
+        status: "Pending",
+      },
+    ]);
     if (error) {
       console.log(error);
       alert(error.message);

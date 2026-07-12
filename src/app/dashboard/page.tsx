@@ -1,4 +1,5 @@
 "use client";
+import QuickActions from "../../components/dashboard/QuickActions";
 import LeaveChart from "../../components/dashboard/LeaveChart";
 import WelcomeCard from "../../components/dashboard/WelcomeCard";
 import RecentActivity from "../../components/dashboard/RecentActivity";
@@ -56,7 +57,7 @@ export default function Dashboard() {
       return;
     }
 
-    setName(profile.name);
+    setName(profile.name ?? "");
 
     // Leaves query
     let query = supabase
@@ -76,22 +77,24 @@ export default function Dashboard() {
       return;
     }
 
+    const leaves = data ?? [];
+
     // Recent Activity
-    setActivities(data.slice(0, 5));
+    setActivities(leaves.slice(0, 5));
 
     // Stats
-    setTotalLeaves(data.length);
+    setTotalLeaves(leaves.length);
 
     setPendingLeaves(
-      data.filter((leave) => leave.status === "Pending").length
+      leaves.filter((leave) => leave.status === "Pending").length
     );
 
     setApprovedLeaves(
-      data.filter((leave) => leave.status === "Approved").length
+      leaves.filter((leave) => leave.status === "Approved").length
     );
 
     setRejectedLeaves(
-      data.filter((leave) => leave.status === "Rejected").length
+      leaves.filter((leave) => leave.status === "Rejected").length
     );
   }
 
@@ -144,6 +147,7 @@ export default function Dashboard() {
           <div className="grid lg:grid-cols-2 gap-6 mt-8">
 
             <RecentActivity activities={activities} />
+            <QuickActions />
 
             <LeaveChart
               approved={approvedLeaves}

@@ -15,9 +15,9 @@ import {
 export default function Sidebar() {
   const router = useRouter();
   const [role, setRole] = useState("");
-useEffect(() => {
-  getRole();
-}, []);
+  useEffect(() => {
+    void getRole();
+  }, []);
 
 async function getRole() {
   const {
@@ -41,7 +41,7 @@ async function handleLogout() {
 
   alert("👋 Logged Out Successfully!");
 
-  router.push("/login");
+  router.replace("/login");
 }
   return (
     <aside className="w-72 min-h-screen bg-slate-900 border-r border-slate-800 p-6">
