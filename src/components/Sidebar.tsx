@@ -1,5 +1,5 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
@@ -14,7 +14,28 @@ import {
 
 export default function Sidebar() {
   const router = useRouter();
+  const [role, setRole] = useState("");
+useEffect(() => {
+  getRole();
+}, []);
 
+async function getRole() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) return;
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("email", session.user.email)
+    .single();
+
+  if (data) {
+    setRole(data.role);
+  }
+}
 async function handleLogout() {
   await supabase.auth.signOut();
 
@@ -55,13 +76,25 @@ async function handleLogout() {
           Leave History
         </Link>
 
-       <Link
-  href="/employees"
-  className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
->
-  <Users size={20} />
-  Employees
-</Link>
+{role === "hr" && (
+  <>
+    <Link
+      href="/employees"
+      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
+    >
+      <Users size={20} />
+      Employees
+    </Link>
+
+    <Link
+      href="/hr"
+      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 transition"
+    >
+      <Users size={20} />
+      HR Panel
+    </Link>
+  </>
+)}
 
 
         <Link

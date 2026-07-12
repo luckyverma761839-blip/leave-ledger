@@ -6,15 +6,30 @@ import { supabase } from "../lib/supabase";
 
 export default function Topbar() {
   const [email, setEmail] = useState("");
-
+  const [role, setRole] = useState("");
   useEffect(() => {
     async function getUser() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
       if (user) {
+
         setEmail(user.email || "");
+
+        console.log("Email:", user.email);
+
+        const { data, error } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("email", user.email);
+
+console.log("Current Email:", user.email);
+console.log("Profiles:", data);
+console.log("Error:", error);
+
+if (data && data.length > 0) {
+  setRole(data[0].role);
+}
       }
     }
 
@@ -63,7 +78,7 @@ export default function Topbar() {
             </h3>
 
             <p className="text-sm text-gray-400">
-              Employee
+              {role === "hr" ? "HR" : "Employee"}
             </p>
           </div>
 

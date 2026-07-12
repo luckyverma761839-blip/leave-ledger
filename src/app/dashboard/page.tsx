@@ -12,14 +12,32 @@ export default function Dashboard() {
   const [approvedLeaves, setApprovedLeaves] = useState(0);
   const [rejectedLeaves, setRejectedLeaves] = useState(0);
 
-useEffect(() => {
-  fetchDashboardData();
-}, []);
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   async function fetchDashboardData() {
-    const { data, error } = await supabase
-      .from("leaves")
-      .select("*");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    // User ka role nikalo
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("email", user.email)
+      .single();
+
+    let query = supabase.from("leaves").select("*");
+
+    // Agar employee hai to sirf apni leaves
+    if (profile?.role !== "hr") {
+      query = query.eq("employee_email", user.email);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.log(error);
@@ -41,63 +59,63 @@ useEffect(() => {
     );
   }
 
- return (
-  <ProtectedRoute>
-    <main className="flex bg-slate-950 text-white">
+  return (
+    <ProtectedRoute>
+      <main className="flex bg-slate-950 text-white">
 
-      <Sidebar />
+        <Sidebar />
 
-      <section className="flex-1 p-10">
+        <section className="flex-1 p-10">
 
-        <Topbar />
+          <Topbar />
 
-        <div className="grid md:grid-cols-4 gap-6 mt-10">
+          <div className="grid md:grid-cols-4 gap-6 mt-10">
 
-          <div className="bg-slate-900 p-6 rounded-2xl">
-            <h2 className="text-gray-400">
-              Total Leaves
-            </h2>
+            <div className="bg-slate-900 p-6 rounded-2xl">
+              <h2 className="text-gray-400">
+                Total Leaves
+              </h2>
 
-            <p className="text-5xl font-bold text-blue-500 mt-3">
-              {totalLeaves}
-            </p>
+              <p className="text-5xl font-bold text-blue-500 mt-3">
+                {totalLeaves}
+              </p>
+            </div>
+
+            <div className="bg-slate-900 p-6 rounded-2xl">
+              <h2 className="text-gray-400">
+                Pending
+              </h2>
+
+              <p className="text-5xl font-bold text-yellow-400 mt-3">
+                {pendingLeaves}
+              </p>
+            </div>
+
+            <div className="bg-slate-900 p-6 rounded-2xl">
+              <h2 className="text-gray-400">
+                Approved
+              </h2>
+
+              <p className="text-5xl font-bold text-green-400 mt-3">
+                {approvedLeaves}
+              </p>
+            </div>
+
+            <div className="bg-slate-900 p-6 rounded-2xl">
+              <h2 className="text-gray-400">
+                Rejected
+              </h2>
+
+              <p className="text-5xl font-bold text-red-500 mt-3">
+                {rejectedLeaves}
+              </p>
+            </div>
+
           </div>
 
-          <div className="bg-slate-900 p-6 rounded-2xl">
-            <h2 className="text-gray-400">
-              Pending
-            </h2>
+        </section>
 
-            <p className="text-5xl font-bold text-yellow-400 mt-3">
-              {pendingLeaves}
-            </p>
-          </div>
-
-          <div className="bg-slate-900 p-6 rounded-2xl">
-            <h2 className="text-gray-400">
-              Approved
-            </h2>
-
-            <p className="text-5xl font-bold text-green-400 mt-3">
-              {approvedLeaves}
-            </p>
-          </div>
-
-          <div className="bg-slate-900 p-6 rounded-2xl">
-            <h2 className="text-gray-400">
-              Rejected
-            </h2>
-
-            <p className="text-5xl font-bold text-red-500 mt-3">
-              {rejectedLeaves}
-            </p>
-          </div>
-
-        </div>
-
-      </section>
-
-     </main>
-  </ProtectedRoute>
+      </main>
+    </ProtectedRoute>
   );
 }

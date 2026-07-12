@@ -11,44 +11,56 @@ export default function ApplyLeave() {
   const [toDate, setToDate] = useState("");
   const [reason, setReason] = useState("");
 
- async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault();
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
 
-  // Check login user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    // Check login user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  console.log("USER:", user);
+    console.log("USER:", user);
 
-  if (!user) {
-    alert("Please login first!");
-    return;
+    if (!user) {
+      alert("Please login first!");
+      return;
+    }
+
+    // Profile se name lao
+// Profile se name lao
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("name")
+  .eq("email", user.email)
+  .single();
+
+console.log("User Email:", user.email);
+console.log("Profile:", profile);
+
+const { error } = await supabase.from("leaves").insert([
+  {
+    employee_name: profile?.name,
+    employee_email: user.email,
+    leave_type: leaveType,
+    from_date: fromDate,
+    to_date: toDate,
+    reason: reason,
+    status: "Pending",
+  },
+]);
+    if (error) {
+      console.log(error);
+      alert(error.message);
+      return;
+    }
+
+    alert("✅ Leave Request Submitted!");
+
+    setLeaveType("Casual Leave");
+    setFromDate("");
+    setToDate("");
+    setReason("");
   }
-
-  const { error } = await supabase.from("leaves").insert([
-    {
-      employee_name: "Lucky Verma",
-      leave_type: leaveType,
-      from_date: fromDate,
-      to_date: toDate,
-      reason: reason,
-    },
-  ]);
-
-  if (error) {
-    console.log(error);
-    alert(error.message);
-    return;
-  }
-
-  alert("✅ Leave Request Submitted!");
-
-  setLeaveType("Casual Leave");
-  setFromDate("");
-  setToDate("");
-  setReason("");
-}
 
   return (
     <main className="flex min-h-screen bg-slate-950 text-white">
