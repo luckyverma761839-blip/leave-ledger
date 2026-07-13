@@ -1,6 +1,6 @@
 "use client";
 
-import { exportToCSV } from "../../untils/exportCSV";
+import { exportToCSV } from "../../utils/exportCSV";
 import { Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ type LeaveStatus = "Pending" | "Approved" | "Rejected";
 interface LeaveRequest {
   id: string;
   employee_name: string | null;
+  employee_email: string;
   leave_type: string;
   from_date: string;
   to_date: string;
@@ -39,7 +40,15 @@ export default function HRPanel() {
   const fetchLeaves = useCallback(async () => {
     const { data, error: leavesError } = await supabase
       .from("leaves")
-      .select("id, employee_name, leave_type, from_date, to_date, status")
+      .select(`
+  id,
+  employee_name,
+  employee_email,
+  leave_type,
+  from_date,
+  to_date,
+  status
+`)
       .order("created_at", { ascending: false });
 
     if (leavesError) {
@@ -94,26 +103,78 @@ export default function HRPanel() {
   }, [leaves, search, statusFilter]);
 
   async function updateStatus(id: string, status: LeaveStatus) {
+    async function updateStatus(id: string, status: LeaveStatus) {
+  console.log("Button Clicked", id, status);
+
+  setUpdatingId(id);
+  setError("");
+
+  // baaki code...
+}
     setUpdatingId(id);
     setError("");
 
+    // 1. Update leave status
     const { error: updateError } = await supabase
       .from("leaves")
       .update({ status })
       .eq("id", id);
 
     if (updateError) {
-      setError("The leave status could not be updated. Please try again.");
+      console.log("Leave Update Error:", updateError);
+      setError("The leave status could not be updated.");
       setUpdatingId(null);
       return;
     }
 
+    // 2. Find selected leave
+    const leave = leaves.find((item) => item.id === id);
+
+    if (!leave) {
+      console.log("Leave not found");
+      setUpdatingId(null);
+      return;
+    }
+
+    console.log("Leave Data:", leave);
+
+    // 3. Insert notification
+    const { data: notificationData, error: notificationError } =
+      await supabase
+        .from("notifications")
+        .insert([
+          {
+            user_email: leave.employee_email,
+            title: `Leave ${status}`,
+            message: `Your ${leave.leave_type} request has been ${status}.`,
+            is_read: false,
+          },
+        ])
+        .select();
+
+    if (notificationError) {
+      console.log("Notification Error:", notificationError);
+    } else {
+      console.log("Notification Inserted:", notificationData);
+    }
+
+    // 4. Update UI
     setLeaves((currentLeaves) =>
+
       currentLeaves.map((leave) =>
-        leave.id === id ? { ...leave, status } : leave,
-      ),
+        leave.id === id ? { ...leave, status } : leave
+      )
     );
+
     setUpdatingId(null);
+  }
+
+  function formatDate(date: string) {
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   }
 
   if (loading) {
@@ -195,16 +256,26 @@ export default function HRPanel() {
                     const isUpdating = updatingId === leave.id;
 
                     return (
-                      <tr key={leave.id} className="border-b border-slate-800">
-                        <td className="py-4">{leave.employee_name ?? "—"}</td>
-                        <td>{leave.leave_type}</td>
-                        <td>
-                          {new Date(leave.from_date).toLocaleDateString("en-IN")}
-                        </td>
+                      <tr
+                        key={leave.id}
+                        className="border-b border-slate-800 transition-all hover:bg-slate-800/40"
+                      >
+                        <td className="py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">
+                              {leave.employee_name?.charAt(0).toUpperCase() ?? "?"}
+                            </div>
 
-                        <td>
-                          {new Date(leave.to_date).toLocaleDateString("en-IN")}
+                            <div>
+                              <p className="font-semibold">
+                                {leave.employee_name}
+                              </p>
+                            </div>
+                          </div>
                         </td>
+                        <td>{leave.leave_type}</td>
+                        <td>{formatDate(leave.from_date)}</td>
+                        <td>{formatDate(leave.to_date)}</td>
                         <td>
                           <span
                             className={`rounded-full px-3 py-1 text-sm font-medium ${leave.status === "Approved"
@@ -217,23 +288,29 @@ export default function HRPanel() {
                             {leave.status}
                           </span>
                         </td>
-                        <td className="flex gap-2 py-3">
-                          <button
-                            type="button"
-                            onClick={() => void updateStatus(leave.id, "Approved")}
-                            disabled={isUpdating || leave.status === "Approved"}
-                            className="rounded-lg bg-green-600 px-4 py-2 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void updateStatus(leave.id, "Rejected")}
-                            disabled={isUpdating || leave.status === "Rejected"}
-                            className="rounded-lg bg-red-600 px-4 py-2 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
+                        <td className="py-3">
+                          {leave.status === "Pending" ? (
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => void updateStatus(leave.id, "Approved")}
+                                disabled={isUpdating}
+                                className="rounded-lg bg-green-600 px-4 py-2 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {isUpdating ? "Updating..." : "Approve"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void updateStatus(leave.id, "Rejected")}
+                                disabled={isUpdating}
+                                className="rounded-lg bg-red-600 px-4 py-2 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {isUpdating ? "Updating..." : "Reject"}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-500">No Action</span>
+                          )}
                         </td>
                       </tr>
                     );

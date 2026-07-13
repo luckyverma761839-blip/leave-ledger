@@ -1,6 +1,7 @@
 "use client";
+import NotificationBell from "./NotificationBell";
 
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -55,9 +56,7 @@ export default function Topbar() {
           />
         </div>
 
-        <button className="bg-slate-900 p-3 rounded-xl hover:bg-slate-800">
-          <Bell size={20} />
-        </button>
+       <NotificationBell />
 
         <div className="flex items-center gap-3 bg-slate-900 px-4 py-2 rounded-xl">
 
